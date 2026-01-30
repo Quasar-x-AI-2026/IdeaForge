@@ -1,0 +1,7 @@
+{
+  "name": "HealQ - Centralized AI OPD Management",
+  "description": "A centralized platform for patients to book digital OPD tokens and hospitals to manage queues in real-time with AI-powered waiting time predictions.",
+  "requestFramePermissions": [
+    "geolocation"
+  ]
+}
