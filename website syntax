@@ -1,0 +1,49 @@
+
+import React, { useState } from 'react';
+import Layout from './components/Layout';
+import PatientView from './components/PatientView';
+import AdminView from './components/AdminView';
+import AmbulanceView from './components/AmbulanceView';
+import PharmacyView from './components/PharmacyView';
+import { Token } from './types';
+
+const App: React.FC = () => {
+  const [view, setView] = useState<'patient' | 'admin' | 'ambulance' | 'pharmacy'>('patient');
+  const [language, setLanguage] = useState<'en' | 'hi'>('en');
+  const [activeToken, setActiveToken] = useState<Token | null>(null);
+
+  const renderView = () => {
+    switch(view) {
+      case 'patient': 
+        return <PatientView 
+          language={language} 
+          onNavigate={setView} 
+          activeToken={activeToken}
+          setActiveToken={setActiveToken}
+        />;
+      case 'admin': return <AdminView language={language} />;
+      case 'ambulance': return <AmbulanceView />;
+      case 'pharmacy': return <PharmacyView />;
+      default: return <PatientView 
+        language={language} 
+        onNavigate={setView} 
+        activeToken={activeToken}
+        setActiveToken={setActiveToken}
+      />;
+    }
+  };
+
+  return (
+    <Layout 
+      view={view} 
+      setView={setView} 
+      language={language} 
+      setLanguage={setLanguage}
+      activeToken={activeToken}
+    >
+      {renderView()}
+    </Layout>
+  );
+};
+
+export default App;
