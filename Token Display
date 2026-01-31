@@ -1,0 +1,118 @@
+
+import React, { useEffect, useState } from 'react';
+import { Clock, MapPin, Share2, BellRing, ChevronRight, Activity } from 'lucide-react';
+import { Token } from '../types';
+
+interface TokenDisplayProps {
+  token: Token;
+  language: 'en' | 'hi';
+  onClose?: () => void;
+}
+
+const TokenDisplay: React.FC<TokenDisplayProps> = ({ token, language, onClose }) => {
+  const [servingToken, setServingToken] = useState(Math.max(1, token.tokenNumber - token.positionInQueue));
+  const [timeLeft, setTimeLeft] = useState(45); // minutes
+
+  // Simulate live queue movement
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setServingToken(prev => {
+        if (prev < token.tokenNumber - 1) return prev + 1;
+        return prev;
+      });
+      setTimeLeft(prev => Math.max(5, prev - 1));
+    }, 15000); // Move queue every 15 seconds for demo
+    return () => clearInterval(interval);
+  }, [token.tokenNumber]);
+
+  return (
+    <div className="bg-white rounded-3xl shadow-2xl overflow-hidden border border-slate-100 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <div className="bg-gradient-to-br from-blue-700 to-blue-500 p-8 text-white relative">
+        <div className="absolute top-4 right-4 flex gap-2">
+          <button className="p-2 bg-white/10 hover:bg-white/20 rounded-full transition-all">
+            <Share2 size={18} />
+          </button>
+          {onClose && (
+            <button onClick={onClose} className="p-2 bg-white/10 hover:bg-white/20 rounded-full transition-all">
+              <span className="text-xl leading-none">&times;</span>
+            </button>
+          )}
+        </div>
+
+        <div className="flex flex-col items-center text-center space-y-4">
+          <div className="bg-white/20 backdrop-blur-md px-4 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest">
+            {language === 'en' ? 'Live OPD Token' : 'लाइव ओपीडी टोकन'}
+          </div>
+          <div className="relative">
+            <div className="text-7xl font-black tabular-nums tracking-tighter">
+              #{token.tokenNumber}
+            </div>
+            <div className="absolute -right-8 top-0 animate-bounce">
+              <BellRing className="text-orange-400" size={24} />
+            </div>
+          </div>
+          <div className="space-y-1">
+            <h2 className="text-2xl font-bold">{token.hospitalName}</h2>
+            <p className="text-blue-100 font-medium">{token.deptName} • {token.doctorName}</p>
+          </div>
+        </div>
+      </div>
+
+      <div className="p-6 grid grid-cols-2 gap-4 border-b border-slate-50">
+        <div className="bg-slate-50 p-4 rounded-2xl flex flex-col items-center justify-center text-center">
+          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">
+            {language === 'en' ? 'Currently Serving' : 'अभी सेवा में'}
+          </span>
+          <span className="text-2xl font-black text-slate-900">#{servingToken}</span>
+        </div>
+        <div className="bg-slate-50 p-4 rounded-2xl flex flex-col items-center justify-center text-center">
+          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">
+            {language === 'en' ? 'Your Position' : 'आपकी स्थिति'}
+          </span>
+          <span className="text-2xl font-black text-blue-600">{Math.max(1, token.tokenNumber - servingToken)}</span>
+        </div>
+      </div>
+
+      <div className="p-6 space-y-6">
+        <div className="flex items-center justify-between p-4 bg-orange-50 rounded-2xl border border-orange-100">
+          <div className="flex items-center gap-3 text-orange-700">
+            <Clock size={24} />
+            <div>
+              <p className="text-xs font-bold uppercase tracking-wider opacity-70">
+                {language === 'en' ? 'Est. Appointment' : 'अनुमानित समय'}
+              </p>
+              <p className="text-lg font-black">{timeLeft} mins</p>
+            </div>
+          </div>
+          <div className="h-10 w-10 bg-white rounded-full flex items-center justify-center text-orange-500 shadow-sm">
+            <Activity className="animate-pulse" size={20} />
+          </div>
+        </div>
+
+        <div className="space-y-3">
+          <button className="w-full py-4 bg-slate-900 text-white rounded-2xl font-bold flex items-center justify-center gap-3 hover:bg-slate-800 transition-all">
+            <MapPin size={20} />
+            {language === 'en' ? 'Navigate to Hospital' : 'अस्पताल का रास्ता'}
+          </button>
+          <button className="w-full py-4 bg-white border-2 border-slate-100 text-slate-600 rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-slate-50 transition-all">
+            {language === 'en' ? 'Reschedule or Cancel' : 'पुनर्निर्धारित या रद्द करें'}
+            <ChevronRight size={18} />
+          </button>
+        </div>
+
+        <div className="bg-blue-50 p-4 rounded-xl flex gap-3 items-start">
+          <div className="bg-blue-200 p-1.5 rounded-lg text-blue-700">
+            <BellRing size={16} />
+          </div>
+          <p className="text-[11px] text-blue-800 leading-normal">
+            {language === 'en' 
+              ? "We'll notify you when 3 patients are left before your turn. Please arrive at the hospital 15 minutes early." 
+              : "आपकी बारी से 3 मरीज पहले हम आपको सूचित करेंगे। कृपया 15 मिनट पहले अस्पताल पहुंचें।"}
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default TokenDisplay;
