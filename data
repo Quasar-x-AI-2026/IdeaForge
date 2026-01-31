@@ -1,0 +1,8 @@
+{
+  "name": "HealQ - AI OPD Manager",
+  "description": "A centralized AI-powered OPD registration and token management platform for Indian hospitals to reduce waiting times and overcrowding.",
+  "requestFramePermissions": [
+    "geolocation",
+    "microphone"
+  ]
+}
