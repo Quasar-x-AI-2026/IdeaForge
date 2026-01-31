@@ -1,0 +1,144 @@
+import React, { useState, useRef, useEffect } from 'react';
+import { Send, Bot, User, Sparkles, Loader2, AlertCircle, X } from 'lucide-react';
+import { getHospitalRecommendation } from '../services/geminiService';
+import { Hospital, ChatMessage } from '../types';
+
+interface AIChatbotProps {
+  language: 'en' | 'hi';
+  hospitals: Hospital[];
+  onClose?: () => void;
+}
+
+const AIChatbot: React.FC<AIChatbotProps> = ({ language, hospitals, onClose }) => {
+  const [messages, setMessages] = useState<ChatMessage[]>([
+    {
+      role: 'model',
+      text: language === 'en' 
+        ? "Namaste! I'm Aisha, your HealQ assistant. I can help you find the right hospital and department. Please tell me your location or health issue."
+        : "नमस्ते! मैं आयशा (Aisha) हूं। मैं सही अस्पताल और विभाग खोजने में आपकी मदद कर सकती हूं। कृपया मुझे अपना स्थान या स्वास्थ्य समस्या बताएं।",
+      timestamp: new Date()
+    }
+  ]);
+  const [input, setInput] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [messages]);
+
+  const handleSend = async () => {
+    if (!input.trim() || isLoading) return;
+
+    const userMessage: ChatMessage = {
+      role: 'user',
+      text: input,
+      timestamp: new Date()
+    };
+
+    setMessages(prev => [...prev, userMessage]);
+    setInput('');
+    setIsLoading(true);
+
+    try {
+      const response = await getHospitalRecommendation(
+        input,
+        hospitals,
+        "Current Location (New Delhi)",
+        language === 'en' ? 'English' : 'Hindi'
+      );
+
+      const aiMessage: ChatMessage = {
+        role: 'model',
+        text: response,
+        timestamp: new Date()
+      };
+
+      setMessages(prev => [...prev, aiMessage]);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <div className="bg-white rounded-3xl border border-slate-200 shadow-2xl overflow-hidden flex flex-col h-full">
+      <div className="p-4 bg-gradient-to-r from-blue-700 to-blue-500 text-white flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="bg-white/20 p-2 rounded-xl">
+            <Bot size={24} />
+          </div>
+          <div>
+            <h3 className="font-black text-lg">Aisha</h3>
+            <div className="flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse"></span>
+              <span className="text-[10px] uppercase font-bold tracking-widest text-blue-100">Smart Assistant</span>
+            </div>
+          </div>
+        </div>
+        {onClose && (
+          <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-full transition-all">
+            <X size={20} />
+          </button>
+        )}
+      </div>
+
+      <div className="flex-grow overflow-y-auto p-4 space-y-4 bg-slate-50" ref={scrollRef}>
+        {messages.map((msg, i) => (
+          <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+            <div className={`max-w-[85%] p-4 rounded-2xl text-sm ${
+              msg.role === 'user' 
+                ? 'bg-blue-600 text-white rounded-tr-none' 
+                : 'bg-white border border-slate-200 text-slate-800 rounded-tl-none shadow-sm'
+            }`}>
+              {msg.role === 'model' && (
+                <div className="flex items-center gap-1.5 mb-2 text-blue-500">
+                  <Sparkles size={14} />
+                  <span className="text-[10px] font-bold uppercase tracking-wider">Aisha AI</span>
+                </div>
+              )}
+              <div className="whitespace-pre-wrap leading-relaxed">{msg.text}</div>
+            </div>
+          </div>
+        ))}
+        {isLoading && (
+          <div className="flex justify-start">
+            <div className="bg-white border border-slate-200 p-4 rounded-2xl rounded-tl-none flex items-center gap-2">
+              <Loader2 className="animate-spin text-blue-500" size={16} />
+              <span className="text-sm text-slate-400 font-medium italic">Analyzing nearby hospitals...</span>
+            </div>
+          </div>
+        )}
+      </div>
+
+      <div className="p-4 bg-white border-t border-slate-100">
+        <div className="relative">
+          <input
+            type="text"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyPress={(e) => e.key === 'Enter' && handleSend()}
+            placeholder={language === 'en' ? 'Describe your health issue...' : 'अपने स्वास्थ्य के बारे में बताएं...'}
+            className="w-full pl-4 pr-12 py-3 bg-slate-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm text-black font-medium"
+          />
+          <button 
+            onClick={handleSend}
+            disabled={!input.trim() || isLoading}
+            className="absolute right-2 top-1/2 -translate-y-1/2 bg-blue-600 text-white p-1.5 rounded-lg hover:bg-blue-700 disabled:bg-slate-300 transition-all"
+          >
+            <Send size={18} />
+          </button>
+        </div>
+        <div className="mt-3 flex items-start gap-2 text-[9px] text-slate-400 leading-tight">
+          <AlertCircle size={12} className="shrink-0 text-orange-400" />
+          <p>Aisha is for guidance only. Not a medical substitute. For emergencies, call 102/108.</p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default AIChatbot;
